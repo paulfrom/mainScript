@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="seaweedfs-client-0.7.3.RELEASE">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/seaweedfs-client-0.7.3.RELEASE.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

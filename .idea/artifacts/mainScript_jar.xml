@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="mainScript:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/mainScript_jar</output-path>
+    <root id="archive" name="mainScript.jar">
+      <element id="module-output" name="mainScript" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/mail-1.4.7.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/lombok-1.16.14.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/mysql-connector-java-5.1.41.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
