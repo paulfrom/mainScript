@@ -17,6 +17,7 @@ import javax.mail.MessagingException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -100,7 +101,7 @@ public class DeliverWork {
                     }
                 }
             } catch (Throwable throwable) {
-                return false;
+                throwable.printStackTrace();
             }
         }
         return true;
@@ -115,8 +116,8 @@ public class DeliverWork {
     }
 
 
-    private static String saveIntoWeed(RemoteFile remoteFile, String projectId) throws SQLException {
-        String url = "http://59.215.226.174/WebDiskServerDemo/doc?doc_id="+remoteFile.getFileId();
+    private static String saveIntoWeed(RemoteFile remoteFile, String projectId) throws SQLException, UnsupportedEncodingException {
+        String url = "http://59.215.226.174/WebDiskServerDemo/doc?doc_id="+URLEncoder.encode(remoteFile.getFileId(), "utf-8");
         CloseableHttpClient httpClient = null;
         CloseableHttpResponse response = null;
         String res = "";
@@ -130,7 +131,11 @@ public class DeliverWork {
             FileHandleStatus fileHandleStatus = getFileTemplate().saveFileByStream(fileName,new ByteArrayInputStream(EntityUtils.toByteArray(result)));
             System.out.println(fileHandleStatus);
             File file = new File();
-            file.setContentType(result.getContentType().getValue());
+            if(result!=null && result.getContentType()!=null && result.getContentType().getValue()!=null){
+                file.setContentType(result.getContentType().getValue());
+            }else {
+                file.setContentType("application/error");
+            }
             file.setDataId(Integer.parseInt(projectId));
             file.setName(fileName);
             if(fileName.contains(".bmp")||fileName.contains(".jpg")||fileName.contains(".jpeg")||fileName.contains(".png")||fileName.contains(".gif")) {
@@ -159,7 +164,7 @@ public class DeliverWork {
             ps.setInt(2, file.getType());
             ps.setString(3, file.getEnumValue());
             ps.setInt(4,file.getDataId());
-            ps.setString(5,url);
+            ps.setString(5,file.getUrl());
             ps.setString(6,file.getName());
             ps.setString(7,file.getContentType());
             ps.setLong(8,file.getSize());
@@ -180,6 +185,8 @@ public class DeliverWork {
         } catch (IOException e) {
             e.printStackTrace();
             res = e.getMessage();
+        }catch (Exception ex){
+            ex.printStackTrace();
         }finally {
             if(httpClient!=null){
                 try {
