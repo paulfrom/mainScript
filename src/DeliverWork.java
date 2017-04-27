@@ -18,12 +18,22 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 /**
  * Created by liusonglin on 2017/4/27.
  */
 public class DeliverWork {
 
     public static FileTemplate fileTemplate ;
+
+    public static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    final static String selectAccount= "select id,project_from from fp_project_apply";
+
+    final static String insertFile = "INSERT INTO fp_file (post_time,type,enum_value,data_id,url,name,content_type,size,status,resources ) VALUES(?,?,?,?,?,?,?,?,?,? ) ";
+
 
     public static FileTemplate getFileTemplate(){
         if(fileTemplate!=null){
@@ -43,27 +53,24 @@ public class DeliverWork {
     }
 
     public static void main(String[] args) throws UnsupportedEncodingException, MessagingException {
-//        JdbcFactory jdbcFactoryChanye=new JdbcFactory("jdbc:mysql://127.0.0.1:3306/fp_guimin?useUnicode=true&characterEncoding=UTF-8","root","111111","com.mysql.jdbc.Driver");
-//        Connection connection = jdbcFactoryChanye.getConnection();
-//        final String selectAccount= "select id,project_from from fp_project_apply";
-//
-//        final String insertFile = "";
-//
-//        try {
-//            PreparedStatement ps = connection.prepareStatement(selectAccount);
-//            ResultSet resultSet = ps.executeQuery();
-//            while (resultSet.next()){
-//                String id = resultSet.getString(1);
-//                String from = resultSet.getString(2);
-//                System.out.println(id+"!!!~~~~~~~~~!!!!"+from);
-//                syncTheFile(id,from);
-//            }
-//            ps.close();
-//            connection.close();
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-        syncTheFile("10","3491377537858648");
+        JdbcFactory jdbcFactoryChanye=new JdbcFactory("jdbc:mysql://127.0.0.1:3306/fp_guimin?useUnicode=true&characterEncoding=UTF-8","root","111111","com.mysql.jdbc.Driver");
+        Connection connection = jdbcFactoryChanye.getConnection();
+        Map<String,String> map = new HashMap();
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(selectAccount);
+            ResultSet resultSet = ps.executeQuery();
+            while (resultSet.next()){
+                map.put(resultSet.getString(1),resultSet.getString(2));
+            }
+            ps.close();
+            connection.close();
+            map.forEach((k,v)->{
+                syncTheFile(k,v);
+            });
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static boolean syncTheFile(String projectId,String projectForm){
@@ -100,7 +107,7 @@ public class DeliverWork {
     }
 
 
-    private static String saveIntoWeed(RemoteFile remoteFile, String projectId){
+    private static String saveIntoWeed(RemoteFile remoteFile, String projectId) throws SQLException {
         String url = "http://59.215.226.174/WebDiskServerDemo/doc?doc_id="+remoteFile.getFileId();
         CloseableHttpClient httpClient = null;
         CloseableHttpResponse response = null;
@@ -114,6 +121,50 @@ public class DeliverWork {
             String fileName = remoteFile.getFileName();
             FileHandleStatus fileHandleStatus = getFileTemplate().saveFileByStream(fileName,new ByteArrayInputStream(EntityUtils.toByteArray(result)));
             System.out.println(fileHandleStatus);
+            File file = new File();
+            file.setContentType(result.getContentType().getValue());
+            file.setDataId(Integer.parseInt(projectId));
+            file.setName(fileName);
+            if(fileName.contains(".bmp")||fileName.contains(".jpg")||fileName.contains(".jpeg")||fileName.contains(".png")||fileName.contains(".gif")) {
+                file.setType(1);
+            }else if(fileName.contains(".doc")||fileName.contains(".docx")){
+                file.setType(2);
+            }else if(fileName.contains(".xlsx")||fileName.contains("xls")) {
+                file.setType(3);
+            }else if(fileName.contains(".pdf")) {
+                file.setType(4);
+            }else {
+                file.setType(5);
+            }
+            String accessUrl = "/"+fileHandleStatus.getFileId().replaceAll(",","/").concat("/").concat(fileName);
+            file.setUrl(accessUrl);
+            file.setSize(fileHandleStatus.getSize());
+            file.setPostTime(new java.util.Date());
+            file.setStatus(0);
+            file.setEnumValue("123123");
+            file.setResources(1);
+            JdbcFactory jdbcFactoryChanye=new JdbcFactory("jdbc:mysql://127.0.0.1:3306/fp_guimin?useUnicode=true&characterEncoding=UTF-8","root","111111","com.mysql.jdbc.Driver");
+            Connection connection = jdbcFactoryChanye.getConnection();
+            DatabaseMetaData dmd= connection.getMetaData();
+            PreparedStatement ps = connection.prepareStatement(insertFile,new String[]{"ID"});
+            ps.setString(1,sdf.format(file.getPostTime()) );
+            ps.setInt(2, file.getType());
+            ps.setString(3, file.getEnumValue());
+            ps.setInt(4,file.getDataId());
+            ps.setString(5,url);
+            ps.setString(6,file.getName());
+            ps.setString(7,file.getContentType());
+            ps.setLong(8,file.getSize());
+            ps.setInt(9,file.getStatus());
+            ps.setInt(10,file.getResources());
+            ps.executeUpdate();
+            if(dmd.supportsGetGeneratedKeys()) {
+                ResultSet rs= ps.getGeneratedKeys();
+                while(rs.next()) {
+                    System.out.println(rs.getLong(1));
+                }
+            }
+            ps.close();
             res = "success";
         } catch (ClientProtocolException e) {
             e.printStackTrace();
