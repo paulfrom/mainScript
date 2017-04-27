@@ -32,6 +32,8 @@ public class DeliverWork {
 
     final static String selectAccount= "select id,project_from from fp_project_apply";
 
+    static Connection connection;
+
     final static String insertFile = "INSERT INTO fp_file (post_time,type,enum_value,data_id,url,name,content_type,size,status,resources ) VALUES(?,?,?,?,?,?,?,?,?,? ) ";
 
 
@@ -54,7 +56,7 @@ public class DeliverWork {
 
     public static void main(String[] args) throws UnsupportedEncodingException, MessagingException {
         JdbcFactory jdbcFactoryChanye=new JdbcFactory("jdbc:mysql://127.0.0.1:3306/fp_guimin?useUnicode=true&characterEncoding=UTF-8","root","111111","com.mysql.jdbc.Driver");
-        Connection connection = jdbcFactoryChanye.getConnection();
+        connection = jdbcFactoryChanye.getConnection();
         Map<String,String> map = new HashMap();
 
         try {
@@ -64,12 +66,18 @@ public class DeliverWork {
                 map.put(resultSet.getString(1),resultSet.getString(2));
             }
             ps.close();
-            connection.close();
             map.forEach((k,v)->{
                 syncTheFile(k,v);
             });
+            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
+        }finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -143,8 +151,8 @@ public class DeliverWork {
             file.setStatus(0);
             file.setEnumValue("123123");
             file.setResources(1);
-            JdbcFactory jdbcFactoryChanye=new JdbcFactory("jdbc:mysql://127.0.0.1:3306/fp_guimin?useUnicode=true&characterEncoding=UTF-8","root","111111","com.mysql.jdbc.Driver");
-            Connection connection = jdbcFactoryChanye.getConnection();
+//            JdbcFactory jdbcFactoryChanye=new JdbcFactory("jdbc:mysql://127.0.0.1:3306/fp_guimin?useUnicode=true&characterEncoding=UTF-8","root","111111","com.mysql.jdbc.Driver");
+//            Connection connection = jdbcFactoryChanye.getConnection();
             DatabaseMetaData dmd= connection.getMetaData();
             PreparedStatement ps = connection.prepareStatement(insertFile,new String[]{"ID"});
             ps.setString(1,sdf.format(file.getPostTime()) );
