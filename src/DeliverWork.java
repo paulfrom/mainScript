@@ -31,11 +31,11 @@ public class DeliverWork {
 
     public static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    final static String selectAccount= "select id,project_from from fp_project_apply";
+    final static String selectAccount= "select id,project_from from fp_project_apply_copy";
 
     static Connection connection;
 
-    final static String insertFile = "INSERT INTO fp_file (post_time,type,enum_value,data_id,url,name,content_type,size,status,resources ) VALUES(?,?,?,?,?,?,?,?,?,? ) ";
+    final static String insertFile = "INSERT INTO fp_file_copy (post_time,type,enum_value,data_id,url,name,content_type,size,status,resources ) VALUES(?,?,?,?,?,?,?,?,?,? ) ";
 
 
     public static FileTemplate getFileTemplate(){
@@ -56,7 +56,7 @@ public class DeliverWork {
     }
 
     public static void main(String[] args) throws UnsupportedEncodingException, MessagingException {
-        JdbcFactory jdbcFactoryChanye=new JdbcFactory("jdbc:mysql://127.0.0.1:3306/fp_guimin?useUnicode=true&characterEncoding=UTF-8","root","111111","com.mysql.jdbc.Driver");
+        JdbcFactory jdbcFactoryChanye=new JdbcFactory("jdbc:mysql://127.0.0.1:3306/fp_guimin?useUnicode=true&characterEncoding=UTF-8","guimin_db","guimin@98fhi3p2hUFHfdfoi","com.mysql.jdbc.Driver");
         connection = jdbcFactoryChanye.getConnection();
         Map<String,String> map = new HashMap();
 
@@ -83,7 +83,7 @@ public class DeliverWork {
     }
 
     public static boolean syncTheFile(String projectId,String projectForm){
-        String resultBody = getResultBody("http://114.55.100.212:8217/web/leavePoorFileService?id="+projectForm);
+        String resultBody = getResultBody("http://59.215.226.169/web/leavePoorFileService?id="+projectForm);
         if(resultBody!=null) {
             RemoteResult<RemoteFile> remoteFileRemoteResult = null;
             try {
